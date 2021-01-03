@@ -530,32 +530,26 @@ class db extends mysqli ///< http://php.net/manual/en/class.mysqli.php
  private function queryMatrixInternal($table, $fields, $where, $order, $limit, $skip, $useNames)
  {
   //echo "queryMatrixInternal('$table','$fields','$where','$order','$limit','$skip')<br>\n";
-  $result = array();
-  $names = explode(',', $fields);
-  $nameCount = count($names);
-  if ($nameCount < 2)
-   return $result;
+  $result = [];
   $sql = self::makeQuerySelect($table, $fields, $where, $order);
   $this->addQuery($sql);
   if ($this->real_query($sql) && ($records = $this->use_result()))
   {
-   foreach ($names as &$n)
-   {
-    $pos = strrpos($n, ')');
-    if ($pos)
-     $n = substr($n, $pos + 1);
-   }
+   $names = array_map(function($f) { return $f->name; }, $records->fetch_fields());
+   $fieldCount = count($names);
    while ($record = $records->fetch_row())
    {
     if (is_int($skip) && ($skip-- > 0))
      continue;
     if (is_int($limit) && (--$limit < 0))
      break;
-    if (count($record) == 2)
+    if ($fieldCount == 1)
+     $row = null;
+    else if ($fieldCount == 2)
      $row = $record[1];
     else
     {
-     $row = array();
+     $row = [];
      for ($i = 1; $i < count($names); $i++)
       if ($useNames)
        $row[$names[$i]] = $record[$i];

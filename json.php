@@ -21,6 +21,7 @@ class json
   $result = str_replace("\r", "", $result);
   $result = str_replace("\n", "\\n", $result);
   $result = str_replace("\t", "\\t", $result);
+  $result = str_replace("\'", "\\\'", $result);
   $result = str_replace("\"", "\\\"", $result);
   return $result;
  }

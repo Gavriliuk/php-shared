@@ -293,9 +293,11 @@ class db extends mysqli ///< http://php.net/manual/en/class.mysqli.php
   * @param string $fields An asterisk sign or comma-separated list of the field names to retrieve
   * @param mixed $where String SQL WHERE clause or assoc_array
   * @param string $order String SQL ORDER BY clause
+  * @param int $limit Maximum number of records to retrieve
+  * @param int $offset Number of records to skip at the beginning
   * @return string SQL query text
   */
- static function makeQuerySelect($table, $fields = null, $where = null, $order = null)
+ private static function makeQuerySelect($table, $fields = null, $where = null, $order = null, $limit = null, $offset = null)
  {
   $sql = 'select ' . ($fields ? $fields : '*');
   if (strlen(trim($table)))
@@ -305,6 +307,8 @@ class db extends mysqli ///< http://php.net/manual/en/class.mysqli.php
    if (strlen(trim($order)))
     $sql .= ' order by ' . $order;
   }
+  if ($limit)
+   $sql .= ' limit ' . $limit . ($offset ? (' offset ' . $offset) : '');
   return $sql;
  }
 
@@ -435,19 +439,13 @@ class db extends mysqli ///< http://php.net/manual/en/class.mysqli.php
  function queryRows($table, $fields = null, $where = null, $order = null, $limit = null, $skip = null)
  {
   //echo "queryRows('$table','$fields','$where','$order','$limit','$skip')<br>\n";
-  $result = array();
-  $sql = self::makeQuerySelect($table, $fields, $where, $order);
+  $result = [];
+  $sql = self::makeQuerySelect($table, $fields, $where, $order, $limit, $skip);
   $this->addQuery($sql);
   if ($this->real_query($sql) && ($records = $this->use_result()))
   {
    while ($record = $records->fetch_row())
-   {
-    if (is_int($skip) && ($skip-- > 0))
-     continue;
-    if (is_int($limit) && (--$limit < 0))
-     break;
     $result[] = (count($record) == 1) ? $record[0] : $record;
-   }
    $records->close();
   }
   $this->addError();
@@ -482,25 +480,18 @@ class db extends mysqli ///< http://php.net/manual/en/class.mysqli.php
  function queryRows2($table, $fields = null, $where = null, $order = null, $limit = null, $skip = null)
  {
   //echo "queryRows2('$table','$fields','$where','$order','$limit','$skip')<br>\n";
-  $result = array();
+  $result = [];
   $key = null;
-  $sql = self::makeQuerySelect($table, $fields, $where, $order);
+  $sql = self::makeQuerySelect($table, $fields, $where, $order, $limit, $skip);
   $this->addQuery($sql);
   if ($this->real_query($sql) && ($records = $this->use_result()))
   {
    while ($record = $records->fetch_array(MYSQLI_ASSOC))
    {
-    if (is_int($skip) && ($skip-- > 0))
-     continue;
-    if (is_int($limit) && (--$limit < 0))
-     break;
     if (count($record) == 1)
     {
      if (is_null($key))
-     {
-      $keys = array_keys($record);
-      $key = $keys[0];
-     }
+      $key = array_keys($record)[0];
      $result[] = $record[$key];
     }
     else
@@ -531,7 +522,7 @@ class db extends mysqli ///< http://php.net/manual/en/class.mysqli.php
  {
   //echo "queryMatrixInternal('$table','$fields','$where','$order','$limit','$skip')<br>\n";
   $result = [];
-  $sql = self::makeQuerySelect($table, $fields, $where, $order);
+  $sql = self::makeQuerySelect($table, $fields, $where, $order, $limit, $skip);
   $this->addQuery($sql);
   if ($this->real_query($sql) && ($records = $this->use_result()))
   {
@@ -539,10 +530,6 @@ class db extends mysqli ///< http://php.net/manual/en/class.mysqli.php
    $fieldCount = count($names);
    while ($record = $records->fetch_row())
    {
-    if (is_int($skip) && ($skip-- > 0))
-     continue;
-    if (is_int($limit) && (--$limit < 0))
-     break;
     if ($fieldCount == 1)
      $row = null;
     else if ($fieldCount == 2)
@@ -719,22 +706,21 @@ class db extends mysqli ///< http://php.net/manual/en/class.mysqli.php
   return self::instance()->updateRows($table, $values, $where);
  }
 
- function mergeRows($table, $values, $where = null, $serial = null)
+ function mergeRows($table, array $values, array $where, $serial = null)
  {
-  if ($this->queryField($table, '1', $where) == null)
-  {
-   if (!is_array($where) || !$this->insertValues($table, $where, $serial))
-    return false;
-  }
-  return $this->updateRows($table, $values, $where);
+  if ($this->queryField($table, '1', $where))
+   return $this->updateRows($table, $values, $where);
+  foreach ($where as $field => $value)
+   $values[$field] = $value;
+  return $this->insertValues($table, $values, $serial);
  }
 
- static function merge($table, $values, $where = null, $serial = null)
+ static function merge($table, array $values, array $where, $serial = null)
  {
   return self::instance()->mergeRows($table, $values, $where, $serial);
  }
 
- function mergeField($table, $field, $value, $where = null, $serial = null)
+ function mergeField($table, $field, $value, array $where, $serial = null)
  {
   return $this->mergeRows($table, [$field => $value], $where, $serial);
  }

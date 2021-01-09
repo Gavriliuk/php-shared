@@ -113,8 +113,7 @@ static function error($text, $info = null)
 
 static function sv($name)
 {
- //return array_key_exists($name, $_SERVER) ? $_SERVER[$name] : null;
- return $_SERVER[$name];
+ return array_key_exists($name, $_SERVER) ? $_SERVER[$name] : null;
 }
 
 }

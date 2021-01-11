@@ -12,6 +12,8 @@ private const INFO_URI = 'https://www.googleapis.com/oauth2/v3/tokeninfo?id_toke
 static function domain()
 {
  $parts = explode('.', http::host());
+ if ($parts[1] == 'com')
+  return http::host();
  return $parts[count($parts) - 2] . '.' . $parts[count($parts) - 1];
 }
 

@@ -63,8 +63,9 @@ static function go($uri = null)
 
 function ssl()
 {
+ $https = util::item($_SERVER, 'HTTPS');
  $proto = util::item($_SERVER, 'REQUEST_SCHEME');
- if ($proto != 'https') // Redirect to HTTPS
+ if ($https != 'on' && $proto != 'https') // Redirect to HTTPS
   self::go('https://' . self::sv('HTTP_HOST') . self::req());
 }
 

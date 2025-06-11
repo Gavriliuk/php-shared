@@ -57,7 +57,7 @@ static function logout()
 }
 
 // is called from /?a=signin
-static function signin($ajax = null)
+static function signin($ajax = null, $limited = null)
 {
 //die('Here');
  $token = http::par('token');
@@ -92,11 +92,13 @@ static function signin($ajax = null)
  $avatar = array_key_exists('picture', $info) ? $info->picture : '';
 
  $db = db::createDefault(true);
- $values = array('type' => db::str('g'), 'sub' => db::str($sub));
+ $values = ['type' => db::str('g'), 'sub' => db::str($sub)];
  $fields = $db->queryFields2(self::TABLE, null, $values);
  //die('Here ' . json::encode($fields) . ' / ' . db::lastQuery());
  if (!$fields)
  {
+  if ($limited)
+   return ['guid' => $guid, 'name' => $name, 'email' => $email];
   $values['guid'] = db::str($guid);
   if ($name)
    $values['name'] = db::str($name);
@@ -112,7 +114,7 @@ static function signin($ajax = null)
  }
  else
  {
-  $values2 = array();
+  $values2 = [];
   if ($guid != $fields['guid'])
    $values2['guid'] = db::str($guid);
   if ($name != $fields['name'])

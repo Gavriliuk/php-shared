@@ -91,15 +91,15 @@ class db extends mysqli ///< http://php.net/manual/en/class.mysqli.php
   //print_r($json);
 
   $conf = json_decode($json);
-  if (!$conf)
+  if (!$conf || !is_object($conf))
    self::error('Invalid config: ' . $json);
   //print_r($conf);
 
-  if (!array_key_exists('database', $conf) || !$conf->database)
+  if (!property_exists($conf, 'database') || !$conf->database)
    self::error('No database in config');
-  if (!array_key_exists('username', $conf) || !$conf->username)
+  if (!property_exists($conf, 'username') || !$conf->username)
    self::error('No username in config');
-  if (!array_key_exists('password', $conf) || !$conf->password)
+  if (!property_exists($conf, 'password') || !$conf->password)
    self::error('No password in config');
 
   return self::create($conf->database, $conf->username, $conf->password, $tmp);

@@ -72,12 +72,12 @@ static function signin($ajax = null, $limited = null)
  if (!$info)
   return self::xerror($ajax, 'Invalid token info', $json);
 
-// if (!array_key_exists('aud', $info))
+// if (!property_exists($info, 'aud'))
 //  self::xerror($ajax, 'No aud in token info', $json);
 // if ($info->aud != self::CLIENT_ID)
 //  self::xerror($ajax, 'Invalid aud in token info', $json);
 
- if (!array_key_exists('sub', $info))
+ if (!property_exists($info, 'sub'))
   return self::xerror($ajax, 'No sub in token info', $json);
 
  if (!$info->sub)
@@ -87,9 +87,9 @@ static function signin($ajax = null, $limited = null)
  $guid = sha1($sub);
  if (!$guid)
   return self::xerror($ajax, 'Error: no guid');
- $name = array_key_exists('name', $info) ? $info->name : '';
- $email = array_key_exists('email', $info) ? $info->email : '';
- $avatar = array_key_exists('picture', $info) ? $info->picture : '';
+ $name = property_exists($info, 'name') ? $info->name : '';
+ $email = property_exists($info, 'email') ? $info->email : '';
+ $avatar = property_exists($info, 'picture') ? $info->picture : '';
 
  $db = db::createDefault(true);
  $values = ['type' => db::str('g'), 'sub' => db::str($sub)];

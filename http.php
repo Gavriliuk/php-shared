@@ -61,7 +61,7 @@ static function go($uri = null)
  exit();
 }
 
-function ssl()
+static function ssl()
 {
  $https = util::item($_SERVER, 'HTTPS');
  $proto = util::item($_SERVER, 'REQUEST_SCHEME');
